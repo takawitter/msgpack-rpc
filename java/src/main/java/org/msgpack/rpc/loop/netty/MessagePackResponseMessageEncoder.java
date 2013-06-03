@@ -26,16 +26,16 @@ import io.netty.handler.codec.MessageToMessageEncoder;
 import org.msgpack.MessagePack;
 import org.msgpack.rpc.message.ResponseMessage;
 
-public class MessagePackEncoder extends MessageToMessageEncoder<ResponseMessage> {
+public class MessagePackResponseMessageEncoder extends MessageToMessageEncoder<ResponseMessage> {
     private final int estimatedLength;
 
     private MessagePack messagePack;
 
-    public MessagePackEncoder(MessagePack messagePack) {
+    public MessagePackResponseMessageEncoder(MessagePack messagePack) {
         this(1024, messagePack);
     }
 
-    public MessagePackEncoder(int estimatedLength, MessagePack messagePack) {
+    public MessagePackResponseMessageEncoder(int estimatedLength, MessagePack messagePack) {
         this.estimatedLength = estimatedLength;
         this.messagePack = messagePack;
     }

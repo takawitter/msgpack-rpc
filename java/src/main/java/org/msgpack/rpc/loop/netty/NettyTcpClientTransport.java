@@ -93,7 +93,6 @@ class NettyTcpClientTransport extends PooledStreamClientTransport<Channel, ByteB
     @Override
     protected void flushPendingBuffer(ByteBufOutputStream b, Channel c) {
         c.write(b.buffer());
-//        c.outboundByteBuffer().writeBytes(b.buffer());
         b.buffer().clear();
     }
 

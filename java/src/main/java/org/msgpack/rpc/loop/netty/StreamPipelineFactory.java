@@ -36,7 +36,8 @@ class StreamPipelineFactory extends ChannelInitializer<SocketChannel> {
     protected void initChannel(SocketChannel ch) throws Exception {
         ch.pipeline()
             .addLast("msgpack-decode-stream", new MessagePackStreamDecoder(messagePack))
-            .addLast("msgpack-encode", new MessagePackEncoder(messagePack))
+            .addLast("msgpack-encode-responsemessage", new MessagePackResponseMessageEncoder(messagePack))
+            .addLast("msgpack-encode-requestmessage", new MessagePackRequestMessageEncoder(messagePack))
             .addLast("message", new MessageHandler(handler));
     }
 }
