@@ -18,14 +18,13 @@
 package org.msgpack.rpc.loop.netty;
 
 import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufInputStream;
 import io.netty.buffer.MessageBuf;
-import io.netty.channel.Channel;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.ByteToMessageDecoder;
 
-import java.io.ByteArrayInputStream;
 import java.io.EOFException;
-import java.nio.ByteBuffer;
+import java.io.InputStream;
 
 import org.msgpack.MessagePack;
 import org.msgpack.type.Value;
@@ -43,27 +42,40 @@ public class MessagePackStreamDecoder extends ByteToMessageDecoder {
     protected void decode(ChannelHandlerContext ctx, ByteBuf in,
             MessageBuf<Object> out) throws Exception {
         // TODO #MN will modify the body with MessagePackBufferUnpacker.
-        if (!buffer.hasRemaining()) {
+        if (!in.isReadable()) {
             return;
         }
-        source.markReaderIndex();
+        in.markReaderIndex();
 
-        byte[] bytes = buffer.array(); // FIXME buffer must has array
-        int offset = buffer.arrayOffset() + buffer.position();
-        int length = buffer.arrayOffset() + buffer.limit();
+        InputStream stream = new ByteBufInputStream(in);
+        int startAvailable = stream.available();
+        try{
+            Unpacker unpacker = msgpack.createUnpacker(stream);
+            Value v = unpacker.readValue();
+//            in.skipBytes(startAvailable - stream.available());
+            out.add(v);
+        }catch( EOFException e ){
+            // not enough buffers.
+            // So retry reading
+            in.resetReaderIndex();
+        }
+/*
+        byte[] bytes = in.array(); // FIXME buffer must has array
+        int offset = in.arrayOffset();
+        int length = in.readableBytes();
         ByteArrayInputStream stream = new ByteArrayInputStream(bytes, offset,
                 length);
         int startAvailable = stream.available();
         try{
             Unpacker unpacker = msgpack.createUnpacker(stream);
             Value v = unpacker.readValue();
-            source.skipBytes(startAvailable - stream.available());
-            return v;
+            in.skipBytes(startAvailable - stream.available());
+            out.add(v);
         }catch( EOFException e ){
             // not enough buffers.
             // So retry reading
-            source.resetReaderIndex();
-            return null;
+            in.resetReaderIndex();
         }
-    }
+*/
+      }
 }

@@ -17,13 +17,13 @@
 //
 package org.msgpack.rpc.loop.netty;
 
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.ChannelPipeline;
-import org.jboss.netty.channel.ChannelPipelineFactory;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.socket.SocketChannel;
+
 import org.msgpack.MessagePack;
 import org.msgpack.rpc.transport.RpcMessageHandler;
 
-class StreamPipelineFactory implements ChannelPipelineFactory {
+class StreamPipelineFactory extends ChannelInitializer<SocketChannel> {
     private RpcMessageHandler handler;
     private MessagePack messagePack;
 
@@ -32,11 +32,11 @@ class StreamPipelineFactory implements ChannelPipelineFactory {
         this.messagePack = messagePack;
     }
 
-    public ChannelPipeline getPipeline() throws Exception {
-        ChannelPipeline p = Channels.pipeline();
-        p.addLast("msgpack-decode-stream", new MessagePackStreamDecoder(messagePack));
-        p.addLast("msgpack-encode", new MessagePackEncoder(messagePack));
-        p.addLast("message", new MessageHandler(handler));
-        return p;
+    @Override
+    protected void initChannel(SocketChannel ch) throws Exception {
+        ch.pipeline()
+            .addLast("msgpack-decode-stream", new MessagePackStreamDecoder(messagePack))
+            .addLast("msgpack-encode", new MessagePackEncoder(messagePack))
+            .addLast("message", new MessageHandler(handler));
     }
 }

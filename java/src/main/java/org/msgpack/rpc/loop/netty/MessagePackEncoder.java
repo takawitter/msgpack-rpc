@@ -24,9 +24,9 @@ import io.netty.channel.ChannelHandlerContext;
 import io.netty.handler.codec.MessageToMessageEncoder;
 
 import org.msgpack.MessagePack;
-import org.msgpack.type.Value;
+import org.msgpack.rpc.message.ResponseMessage;
 
-public class MessagePackEncoder extends MessageToMessageEncoder<Value> {
+public class MessagePackEncoder extends MessageToMessageEncoder<ResponseMessage> {
     private final int estimatedLength;
 
     private MessagePack messagePack;
@@ -41,7 +41,7 @@ public class MessagePackEncoder extends MessageToMessageEncoder<Value> {
     }
 
     @Override
-    protected void encode(ChannelHandlerContext ctx, Value msg,
+    protected void encode(ChannelHandlerContext ctx, ResponseMessage msg,
             MessageBuf<Object> out) throws Exception {
         ByteBuf buf = ctx.alloc().buffer(estimatedLength);
         messagePack.write(new ByteBufOutputStream(buf), msg);

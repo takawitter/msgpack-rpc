@@ -18,7 +18,10 @@
 package org.msgpack.rpc.loop.netty;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.Channel;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.socket.nio.NioServerSocketChannel;
+import io.netty.util.concurrent.Future;
+import io.netty.util.concurrent.GenericFutureListener;
 
 import java.util.Map;
 
@@ -29,7 +32,7 @@ import org.msgpack.rpc.transport.RpcMessageHandler;
 import org.msgpack.rpc.transport.ServerTransport;
 
 class NettyTcpServerTransport implements ServerTransport {
-    private Channel listenChannel;
+//    private Channel listenChannel;
     private final static String CHILD_TCP_NODELAY = "child.tcpNoDelay";
     private final static String REUSE_ADDRESS = "reuseAddress";
 
@@ -42,23 +45,35 @@ class NettyTcpServerTransport implements ServerTransport {
         RpcMessageHandler handler = new RpcMessageHandler(server);
         handler.useThread(true);
 
-        ServerBootstrap bootstrap = new ServerBootstrap(loop.getServerFactory());
-        bootstrap.setPipelineFactory(new StreamPipelineFactory(loop.getMessagePack(), handler));
+        ServerBootstrap bootstrap = new ServerBootstrap();
+        bootstrap.group(loop.getServerParentGroup(), loop.getServerChildGroup())
+            .channel(NioServerSocketChannel.class)
+            .childHandler(new StreamPipelineFactory(loop.getMessagePack(), handler))
+            ;
         final Map<String, Object> options = config.getOptions();
-        setIfNotPresent(options, CHILD_TCP_NODELAY, Boolean.TRUE, bootstrap);
-        setIfNotPresent(options, REUSE_ADDRESS, Boolean.TRUE, bootstrap);
-        bootstrap.setOptions(options);
-        this.listenChannel = bootstrap.bind(address.getSocketAddress());
+        setChildIfNotPresent(options, CHILD_TCP_NODELAY, ChannelOption.TCP_NODELAY, Boolean.TRUE, bootstrap);
+        setIfNotPresent(options, REUSE_ADDRESS, ChannelOption.SO_REUSEADDR, Boolean.TRUE, bootstrap);
+//        bootstrap.setOptions(options);  // TODO
+        bootstrap.bind(address.getSocketAddress());
+//        bootstrap.shutdown()
+//        this.listenChannel = bootstrap.;
     }
 
     public void close() {
-        listenChannel.close();
+//        listenChannel.close();
     }
 
-    private static void setIfNotPresent(Map<String, Object> options,
-            String key, Object value, ServerBootstrap bootstrap) {
+    private static <T> void setIfNotPresent(Map<String, Object> options,
+            String key, ChannelOption<T> option, T value, ServerBootstrap bootstrap) {
         if (!options.containsKey(key)) {
-            bootstrap.setOption(key, value);
+            bootstrap.option(option, value);
+        }
+    }
+
+    private static <T> void setChildIfNotPresent(Map<String, Object> options,
+            String key, ChannelOption<T> option, T value, ServerBootstrap bootstrap) {
+        if (!options.containsKey(key)) {
+            bootstrap.childOption(option, value);
         }
     }
 }

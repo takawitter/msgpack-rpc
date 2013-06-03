@@ -17,6 +17,9 @@
 //
 package org.msgpack.rpc.loop.netty;
 
+import io.netty.channel.EventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
+
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.ScheduledExecutorService;
 
@@ -36,26 +39,34 @@ public class NettyEventLoop extends EventLoop {
         super(workerExecutor, ioExecutor, scheduledExecutor, messagePack);
     }
 
-    private ClientSocketChannelFactory clientFactory = null;
-    private ServerSocketChannelFactory serverFactory = null;
+    private EventLoopGroup clientGroup = null;
+    private EventLoopGroup serverParentGroup = null;
+    private EventLoopGroup serverChildGroup = null;
 
 
-    public synchronized ClientSocketChannelFactory getClientFactory() {
-        if (clientFactory == null) {
-            clientFactory = new NioClientSocketChannelFactory(getIoExecutor(),
-                    getWorkerExecutor()); // TODO: workerCount
+    public synchronized EventLoopGroup getClientEventLoopGroup() {
+        if (clientGroup == null) {
+            clientGroup = new NioEventLoopGroup(); // TODO: workerCount
         }
-        return clientFactory;
+        return clientGroup;
     }
 
-    public synchronized ServerSocketChannelFactory getServerFactory() {
-        if (serverFactory == null) {
-            serverFactory = new NioServerSocketChannelFactory(getIoExecutor(),
-                    getWorkerExecutor()); // TODO: workerCount
+    public synchronized EventLoopGroup getServerParentGroup() {
+        if (serverParentGroup == null) {
+            serverParentGroup = new NioEventLoopGroup(); // TODO: workerCount
             // messages will be dispatched to worker thread on server.
             // see useThread(true) in NettyTcpClientTransport().
         }
-        return serverFactory;
+        return serverParentGroup;
+    }
+
+    public synchronized EventLoopGroup getServerChildGroup() {
+        if (serverChildGroup == null) {
+            serverChildGroup = new NioEventLoopGroup(); // TODO: workerCount
+            // messages will be dispatched to worker thread on server.
+            // see useThread(true) in NettyTcpClientTransport().
+        }
+        return serverChildGroup;
     }
 
     protected ClientTransport openTcpTransport(TcpClientConfig config,
