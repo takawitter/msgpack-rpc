@@ -43,6 +43,13 @@ public class NettyEventLoop extends EventLoop {
     private EventLoopGroup serverParentGroup = null;
     private EventLoopGroup serverChildGroup = null;
 
+    @Override
+    public void shutdown() {
+        if (clientGroup != null) clientGroup.shutdownGracefully();
+        if (serverParentGroup != null) serverParentGroup.shutdownGracefully();
+        if (serverChildGroup != null) serverChildGroup.shutdownGracefully();
+        super.shutdown();
+    }
 
     public synchronized EventLoopGroup getClientEventLoopGroup() {
         if (clientGroup == null) {
