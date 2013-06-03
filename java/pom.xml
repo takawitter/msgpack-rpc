@@ -109,9 +109,9 @@
       <scope>compile</scope>
     </dependency>
     <dependency>
-      <groupId>org.jboss.netty</groupId>
-      <artifactId>netty</artifactId>
-      <version>3.2.1.Final</version>
+      <groupId>io.netty</groupId>
+      <artifactId>netty-all</artifactId>
+      <version>4.0.0.CR3</version>
       <exclusions>
         <exclusion>
           <groupId>javax.servlet</groupId>
