@@ -17,18 +17,21 @@
 //
 package org.msgpack.rpc.loop.netty;
 
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.MessageBuf;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.ByteToMessageDecoder;
+
 import java.io.ByteArrayInputStream;
 import java.io.EOFException;
 import java.nio.ByteBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.handler.codec.frame.FrameDecoder;
+
 import org.msgpack.MessagePack;
 import org.msgpack.type.Value;
 import org.msgpack.unpacker.Unpacker;
 
-public class MessagePackStreamDecoder extends FrameDecoder {
+public class MessagePackStreamDecoder extends ByteToMessageDecoder {
     protected MessagePack msgpack;
 
     public MessagePackStreamDecoder(MessagePack msgpack) {
@@ -37,12 +40,11 @@ public class MessagePackStreamDecoder extends FrameDecoder {
     }
 
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            ChannelBuffer source) throws Exception {
+    protected void decode(ChannelHandlerContext ctx, ByteBuf in,
+            MessageBuf<Object> out) throws Exception {
         // TODO #MN will modify the body with MessagePackBufferUnpacker.
-        ByteBuffer buffer = source.toByteBuffer();
         if (!buffer.hasRemaining()) {
-            return null;
+            return;
         }
         source.markReaderIndex();
 

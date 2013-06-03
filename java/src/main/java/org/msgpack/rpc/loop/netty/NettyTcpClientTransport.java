@@ -17,25 +17,24 @@
 //
 package org.msgpack.rpc.loop.netty;
 
+import io.netty.bootstrap.Bootstrap;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.channel.Channel;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelFutureListener;
+
+import java.nio.channels.Channels;
 import java.util.Map;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.Channels;
-import org.jboss.netty.channel.ChannelFuture;
-import org.jboss.netty.channel.ChannelFutureListener;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.jboss.netty.buffer.HeapChannelBufferFactory;
-import org.jboss.netty.bootstrap.ClientBootstrap;
 import org.msgpack.rpc.Session;
 import org.msgpack.rpc.config.TcpClientConfig;
-import org.msgpack.rpc.transport.RpcMessageHandler;
 import org.msgpack.rpc.transport.PooledStreamClientTransport;
+import org.msgpack.rpc.transport.RpcMessageHandler;
 
-class NettyTcpClientTransport extends PooledStreamClientTransport<Channel, ChannelBufferOutputStream> {
+class NettyTcpClientTransport extends PooledStreamClientTransport<Channel, ByteBufOutputStream> {
     private static final String TCP_NO_DELAY = "tcpNoDelay";
 
-    private final ClientBootstrap bootstrap;
+    private final Bootstrap bootstrap;
 
     NettyTcpClientTransport(TcpClientConfig config, Session session,
             NettyEventLoop loop) {
@@ -44,7 +43,8 @@ class NettyTcpClientTransport extends PooledStreamClientTransport<Channel, Chann
 
         RpcMessageHandler handler = new RpcMessageHandler(session);
 
-        bootstrap = new ClientBootstrap(loop.getClientFactory());
+        bootstrap = new Bootstrap();
+        bootstrap.loop.getClientFactory());
         bootstrap.setPipelineFactory(new StreamPipelineFactory(loop.getMessagePack(), handler));
         Map<String, Object> options = config.getOptions();
         setIfNotPresent(options, TCP_NO_DELAY, Boolean.TRUE, bootstrap);
@@ -109,7 +109,7 @@ class NettyTcpClientTransport extends PooledStreamClientTransport<Channel, Chann
     }
 
     private static void setIfNotPresent(Map<String, Object> options,
-            String key, Object value, ClientBootstrap bootstrap) {
+            String key, Object value, Bootstrap bootstrap) {
         if (!options.containsKey(key)) {
             bootstrap.setOption(key, value);
         }

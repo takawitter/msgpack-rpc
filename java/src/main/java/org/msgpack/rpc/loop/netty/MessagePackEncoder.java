@@ -17,15 +17,16 @@
 //
 package org.msgpack.rpc.loop.netty;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.buffer.ChannelBufferOutputStream;
-import org.jboss.netty.buffer.ChannelBuffers;
-import org.jboss.netty.handler.codec.oneone.OneToOneEncoder;
-import org.msgpack.MessagePack;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.ByteBufOutputStream;
+import io.netty.buffer.MessageBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageEncoder;
 
-public class MessagePackEncoder extends OneToOneEncoder {
+import org.msgpack.MessagePack;
+import org.msgpack.type.Value;
+
+public class MessagePackEncoder extends MessageToMessageEncoder<Value> {
     private final int estimatedLength;
 
     private MessagePack messagePack;
@@ -40,20 +41,10 @@ public class MessagePackEncoder extends OneToOneEncoder {
     }
 
     @Override
-    protected Object encode(ChannelHandlerContext ctx, Channel channel,
-            Object msg) throws Exception {
-        if (msg instanceof ChannelBuffer) {
-            return msg;
-        }
-
-        ChannelBufferOutputStream out = new ChannelBufferOutputStream(
-                ChannelBuffers.dynamicBuffer(estimatedLength, ctx.getChannel()
-                        .getConfig().getBufferFactory()));
-
-        // MessagePack.pack(out, msg);
-        messagePack.write(out, msg);
-
-        ChannelBuffer result = out.buffer();
-        return result;
+    protected void encode(ChannelHandlerContext ctx, Value msg,
+            MessageBuf<Object> out) throws Exception {
+        ByteBuf buf = ctx.alloc().buffer(estimatedLength);
+        messagePack.write(new ByteBufOutputStream(buf), msg);
+        out.add(buf);
     }
 }

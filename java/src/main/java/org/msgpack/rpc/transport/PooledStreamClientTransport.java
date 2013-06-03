@@ -17,16 +17,17 @@
 //
 package org.msgpack.rpc.transport;
 
+import io.netty.util.internal.logging.InternalLogger;
+import io.netty.util.internal.logging.InternalLoggerFactory;
+
 import java.io.IOException;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jboss.netty.logging.InternalLogger;
-import org.jboss.netty.logging.InternalLoggerFactory;
+import org.msgpack.MessagePack;
 import org.msgpack.rpc.Session;
 import org.msgpack.rpc.config.StreamClientConfig;
-import org.msgpack.MessagePack;
 
 public abstract class PooledStreamClientTransport<Channel, PendingBuffer extends OutputStream> implements ClientTransport {
     private static final InternalLogger LOG =

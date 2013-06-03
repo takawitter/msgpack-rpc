@@ -17,15 +17,15 @@
 //
 package org.msgpack.rpc.loop.netty;
 
-import java.nio.ByteBuffer;
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.buffer.ChannelBuffer;
-import org.jboss.netty.handler.codec.oneone.OneToOneDecoder;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.MessageBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToMessageDecoder;
+
 import org.msgpack.MessagePack;
 import org.msgpack.type.Value;
 
-public class MessagePackDecoder extends OneToOneDecoder {
+public class MessagePackDecoder extends MessageToMessageDecoder<ByteBuf> {
 
     MessagePack messagePack;
 
@@ -35,30 +35,12 @@ public class MessagePackDecoder extends OneToOneDecoder {
     }
 
     @Override
-    protected Object decode(ChannelHandlerContext ctx, Channel channel,
-            Object msg) throws Exception {
-        if (!(msg instanceof ChannelBuffer)) {
-            return msg;
-        }
-
-        ChannelBuffer source = (ChannelBuffer) msg;
-
-        ByteBuffer buffer = source.toByteBuffer();
-        if (!buffer.hasRemaining()) {
-            return null;
-        }
-
-        byte[] bytes = buffer.array(); // FIXME buffer must has array
-        int offset = buffer.arrayOffset() + buffer.position();
-        int length = buffer.arrayOffset() + buffer.limit();
-
-        Value v = messagePack.read(bytes, offset, length);
-        return v;
-
-        // TODO MessagePack.unpack()
-        /*
-         * Unpacker pac = new Unpacker(); pac.wrap(bytes, offset, length);
-         * return pac.unpackObject();
-         */
+    protected void decode(ChannelHandlerContext ctx, ByteBuf msg,
+            MessageBuf<Object> out) throws Exception {
+        int length = msg.readableBytes();
+        byte[] bytes = new byte[length];
+        msg.readBytes(bytes);
+        Value v = messagePack.read(bytes, 0, length);
+        out.add(v);
     }
 }

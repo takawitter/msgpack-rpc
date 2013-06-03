@@ -17,15 +17,16 @@
 //
 package org.msgpack.rpc.loop.netty;
 
+import io.netty.bootstrap.ServerBootstrap;
+import io.netty.channel.Channel;
+
 import java.util.Map;
 
-import org.jboss.netty.channel.Channel;
-import org.jboss.netty.bootstrap.ServerBootstrap;
 import org.msgpack.rpc.Server;
+import org.msgpack.rpc.address.Address;
 import org.msgpack.rpc.config.TcpServerConfig;
 import org.msgpack.rpc.transport.RpcMessageHandler;
 import org.msgpack.rpc.transport.ServerTransport;
-import org.msgpack.rpc.address.Address;
 
 class NettyTcpServerTransport implements ServerTransport {
     private Channel listenChannel;

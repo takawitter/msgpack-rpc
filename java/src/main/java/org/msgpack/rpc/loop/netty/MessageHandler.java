@@ -17,14 +17,13 @@
 //
 package org.msgpack.rpc.loop.netty;
 
-import org.jboss.netty.channel.ChannelHandlerContext;
-import org.jboss.netty.channel.ChannelStateEvent;
-import org.jboss.netty.channel.MessageEvent;
-import org.jboss.netty.channel.SimpleChannelUpstreamHandler;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.channel.ChannelInboundMessageHandlerAdapter;
+
 import org.msgpack.rpc.transport.RpcMessageHandler;
 import org.msgpack.type.Value;
 
-class MessageHandler extends SimpleChannelUpstreamHandler {
+class MessageHandler extends ChannelInboundMessageHandlerAdapter<Object> {
     private RpcMessageHandler handler;
     private ChannelAdaptor adaptor;
 
@@ -33,17 +32,14 @@ class MessageHandler extends SimpleChannelUpstreamHandler {
     }
 
     @Override
-    public void channelOpen(ChannelHandlerContext ctx, ChannelStateEvent e)
-            throws Exception {
-        this.adaptor = new ChannelAdaptor(e.getChannel());
-        ctx.sendUpstream(e);
+    public void channelActive(ChannelHandlerContext ctx) throws Exception {
+        this.adaptor = new ChannelAdaptor(ctx.channel());
     }
 
-    @Override
-    public void messageReceived(ChannelHandlerContext ctx, MessageEvent e) {
-        Object m = e.getMessage();
+    public void messageReceived(ChannelHandlerContext ctx, Object m)
+            throws Exception {
         if (!(m instanceof Value)) {
-            ctx.sendUpstream(e);
+            ctx.nextOutboundMessageBuffer().add(m);
             return;
         }
 
